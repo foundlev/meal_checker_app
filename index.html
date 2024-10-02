@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Проверка продуктов</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Подключение стилей -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Подключение Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Анимация загрузки -->
+    <div id="loadingOverlay" style="display: none;">
+        <div class="loader"></div>
+        <div id="loadingText">Загрузка, попытка #1</div>
+    </div>
+    <div class="container">
+        <h1>Проверка продуктов</h1>
+        <div class="input-container">
+            <input type="text" id="productInput" maxlength="50" placeholder="Введите название продукта" autocomplete="off">
+            <ul id="suggestions"></ul>
+        </div>
+        <button id="submitButton">Отправить</button>
+        <div id="warning"></div>
+        <div id="error"></div>
+        <div id="result" style="display: none;">
+            <div id="description"></div>
+            <div id="harmfulnessRating"></div>
+            <div id="caloricValue"></div>
+            <div id="consumptionFrequency"></div>
+            <div id="ratingDescription"></div>
+            <div id="savedIndicator" style="display: none;">
+                Результат из сохраненных данных
+            </div>
+        </div>
+        <button id="clearCache" style="display: none;">
+            Очистить сохраненные данные
+        </button>
+    </div>
+    <!-- Подключение скрипта -->
+    <script src="script.js"></script>
+</body>
+</html>

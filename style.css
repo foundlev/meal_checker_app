@@ -1,0 +1,277 @@
+/* Общие стили */
+:root {
+    --primary-color: #4F46E5;
+    --primary-color-light: #6366F1;
+    --danger-color: #EF4444;
+    --success-color: #10B981;
+    --warning-color: #F59E0B;
+    --text-color: #1F2937;
+    --background-color: #F9FAFB;
+    --surface-color: #FFFFFF;
+    --border-radius: 16px;
+    --font-family: 'Nunito', sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --background-color: #111827;
+        --surface-color: #1F2937;
+        --text-color: #F9FAFB;
+        --primary-color: #6366F1;
+        --primary-color-light: #818CF8;
+        --danger-color: #F87171;
+    }
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 20px;
+    font-family: var(--font-family);
+    background-color: var(--background-color);
+    color: var(--text-color);
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.container {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+h1 {
+    text-align: center;
+    font-weight: 700;
+    margin-bottom: 30px;
+}
+
+.input-container {
+    position: relative;
+}
+
+#productInput {
+    width: 100%;
+    padding: 15px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: var(--border-radius);
+    background-color: var(--surface-color);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    transition: box-shadow 0.3s;
+    color: var(--text-color);
+}
+
+#productInput:focus {
+    outline: none;
+    box-shadow: 0 4px 20px rgba(79, 70, 229, 0.2);
+}
+
+#suggestions {
+    position: absolute;
+    top: calc(100% + 5px);
+    left: 0;
+    right: 0;
+    background-color: var(--surface-color);
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    list-style: none;
+    padding: 0;
+    margin: 5px 0 0 0;
+}
+
+#suggestions li {
+    padding: 12px 20px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+#suggestions li:hover {
+    background-color: rgba(79, 70, 229, 0.1);
+}
+
+#submitButton {
+    width: 100%;
+    padding: 15px;
+    background-color: var(--primary-color);
+    border: none;
+    border-radius: var(--border-radius);
+    color: white;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+    margin-top: 20px;
+}
+
+#submitButton:hover {
+    background-color: var(--primary-color-light);
+}
+
+#submitButton:active {
+    transform: scale(0.98);
+}
+
+#submitButton:disabled {
+    background-color: #9CA3AF;
+    cursor: not-allowed;
+}
+
+#warning, #error {
+    margin-top: 10px;
+    color: var(--danger-color);
+    text-align: center;
+    font-weight: 600;
+}
+
+#result {
+    margin-top: 30px;
+    background-color: var(--surface-color);
+    padding: 25px;
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+#description {
+    font-weight: 700;
+    font-size: 24px;
+    margin-bottom: 20px;
+    text-align: center;
+    color: var(--primary-color);
+}
+
+#harmfulnessRating {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+#harmfulnessNumber {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 15px;
+}
+
+.harmfulness-bar {
+    display: flex;
+    justify-content: center;
+}
+
+.harmfulness-rect {
+    width: 25px;
+    height: 25px;
+    margin: 0 3px;
+    background-color: #E5E7EB;
+    border-radius: 6px;
+    transition: background-color 0.3s, opacity 0.3s;
+    opacity: 0;
+}
+
+#caloricValue {
+    font-size: 18px;
+    margin-bottom: 15px;
+    text-align: center;
+    font-weight: 500;
+}
+
+#consumptionFrequency {
+    font-size: 20px;
+    margin-bottom: 25px;
+    text-align: center;
+    font-weight: 700;
+}
+
+#ratingDescription {
+    font-size: 16px;
+    line-height: 1.7;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+#savedIndicator {
+    margin-top: 15px;
+    font-size: 14px;
+    text-align: center;
+    color: var(--primary-color);
+}
+
+#clearCache {
+    margin-top: 20px;
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    font-size: 16px;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+#clearCache:hover {
+    color: var(--primary-color-light);
+}
+
+/* Анимация загрузки */
+#loadingOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(249, 250, 251, 0.95);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+@media (prefers-color-scheme: dark) {
+    #loadingOverlay {
+        background-color: rgba(17, 24, 39, 0.95);
+    }
+}
+
+.loader {
+    border: 6px solid #E5E7EB;
+    border-top: 6px solid var(--primary-color);
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 20px;
+}
+
+#loadingText {
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Адаптивность */
+@media (max-width: 480px) {
+    body {
+        padding: 15px;
+    }
+
+    h1 {
+        font-size: 26px;
+    }
+
+    #description {
+        font-size: 22px;
+    }
+
+    #consumptionFrequency {
+        font-size: 18px;
+    }
+
+    #ratingDescription {
+        font-size: 15px;
+    }
+}
