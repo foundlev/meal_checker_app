@@ -2,30 +2,34 @@ const harmfulnessThreshold = 7;
 let password = localStorage.getItem('password');
 
 if (!password) {
-    password = prompt('Введите пароль:');
-    if (password) {
-        localStorage.setItem('password', password);
-    } else {
-        alert('Пароль обязателен для использования приложения.');
-    }
+    showPasswordModal();
+}
+
+function showPasswordModal() {
+    const passwordModal = document.getElementById('passwordModal');
+    passwordModal.style.display = 'flex';
+
+    const passwordSubmitButton = document.getElementById('passwordSubmitButton');
+    passwordSubmitButton.addEventListener('click', () => {
+        const passwordInput = document.getElementById('passwordInput').value.trim();
+        if (passwordInput) {
+            password = passwordInput;
+            localStorage.setItem('password', password);
+            passwordModal.style.display = 'none';
+        } else {
+            alert('Пароль обязателен для использования приложения.');
+        }
+    });
 }
 
 let lastSubmissionTime = 0;
 let attemptCount = 0;
 const maxAttempts = 3;
+let controller = null; // Для отмены запроса
 
 // Список популярных продуктов и блюд
 const popularItems = [
-    "яблоко", "банан", "молоко", "хлеб", "картофель", "рис", "курица", "говядина", "рыба", "салат", "сыр", "йогурт",
-    "макароны", "яйца", "апельсин", "помидор", "огурец", "морковь", "свекла", "лук", "чеснок", "шоколад", "мед",
-    "гречка", "овсянка", "манная каша", "виноград", "персик", "груша", "ананас", "киви", "арбуз", "дыня", "малиновое варенье",
-    "клубника", "вишня", "черника", "баклажан", "кабачок", "тыква", "капуста", "брокколи", "шпинат", "зелень",
-    "фасоль", "горох", "суп", "борщ", "плов", "котлета", "омлет", "блины", "оладьи", "суши", "пицца", "бутерброд",
-    "бургеры", "картофель фри", "чипсы", "сосиски", "колбаса", "вареники", "пельмени", "сметана", "майонез",
-    "кетчуп", "горчица", "сок", "чай", "кофе", "компот", "лимонад", "вода", "минеральная вода", "какао", "круассан",
-    "пирожное", "торт", "мороженое", "мармелад", "зефир", "печенье", "пряник", "орехи", "семечки", "изюм", "курага",
-    "чернослив", "шашлык", "лазанья", "спагетти", "равиоли", "соевый соус", "тофу", "грибы", "масло", "оливковое масло",
-    "растительное масло", "уксус", "соус табаско", "соль", "сахар", "перец", "корица", "ваниль", "карри"
+    // Ваш список популярных продуктов и блюд
 ];
 
 // Обработка автодополнения
@@ -88,25 +92,51 @@ document.getElementById('submitButton').addEventListener('click', function() {
     }
 
     const savedData = localStorage.getItem(`meal_${searchMealName}`);
+    let parsedData = null;
     if (savedData) {
-        processResult(JSON.parse(savedData), true);
-    } else {
-        attemptCount = 0;
-        checkMeal(searchMealName);
+        try {
+            parsedData = JSON.parse(savedData);
+            // Проверяем наличие новых полей в ответе
+            if (!parsedData.caloric_value || !parsedData.caloric_value["per_meal"]) {
+                throw new Error("Old format");
+            }
+            processResult(parsedData, true);
+            return;
+        } catch (e) {
+            // Если старый формат, удаляем сохраненные данные
+            localStorage.removeItem(`meal_${searchMealName}`);
+        }
     }
+
+    attemptCount = 0;
+    checkMeal(searchMealName);
 });
 
 function showLoading() {
     document.getElementById('loadingOverlay').style.display = 'flex';
+    document.getElementById('loadingText').innerText = 'Загрузка...';
+    document.getElementById('cancelButton').style.display = 'block';
+    document.getElementById('cancelButton').addEventListener('click', cancelLoading);
 }
 
 function hideLoading() {
     document.getElementById('loadingOverlay').style.display = 'none';
+    document.getElementById('cancelButton').removeEventListener('click', cancelLoading);
 }
 
 function updateLoadingText() {
-    document.getElementById('loadingText').innerText =
-        `Загрузка, попытка #${attemptCount}`;
+    if (attemptCount > 1) {
+        document.getElementById('loadingText').innerText =
+            `Загрузка, попытка #${attemptCount}`;
+    }
+}
+
+function cancelLoading() {
+    if (controller) {
+        controller.abort();
+        hideLoading();
+        document.getElementById('error').innerText = 'Загрузка отменена.';
+    }
 }
 
 function checkMeal(searchMealName) {
@@ -125,7 +155,7 @@ function checkMeal(searchMealName) {
 
     const url = 'https://myapihelper.na4u.ru/ai.php';
 
-    const controller = new AbortController();
+    controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 6000);
 
     fetch(url, {
@@ -139,9 +169,12 @@ function checkMeal(searchMealName) {
     .then(response => response.json())
     .then(data => {
         clearTimeout(timeoutId);
-        const content = data['choices'][0]['message']['content'];
         try {
+            // Извлекаем content из ответа
+            const content = data.choices[0].message.content;
+            // Парсим content как JSON
             const result = JSON.parse(content);
+
             if (result.correct === false) {
                 hideLoading();
                 document.getElementById('error').innerText =
@@ -149,7 +182,7 @@ function checkMeal(searchMealName) {
                 return;
             }
             hideLoading();
-            localStorage.setItem(`meal_${searchMealName}`, content);
+            localStorage.setItem(`meal_${searchMealName}`, JSON.stringify(result));
             processResult(result, false);
         } catch (e) {
             if (attemptCount < maxAttempts) {
@@ -166,7 +199,7 @@ function checkMeal(searchMealName) {
     })
     .catch(error => {
         clearTimeout(timeoutId);
-        if (attemptCount < maxAttempts) {
+        if (attemptCount < maxAttempts && error.name !== 'AbortError') {
             setTimeout(() => {
                 updateLoadingText();
                 checkMeal(searchMealName);
@@ -175,7 +208,7 @@ function checkMeal(searchMealName) {
             hideLoading();
             if (error.name === 'AbortError') {
                 document.getElementById('error').innerText =
-                    'Превышено время ожидания ответа от сервера.';
+                    'Загрузка отменена.';
             } else {
                 document.getElementById('error').innerText =
                     'Не удалось получить данные.';
@@ -246,9 +279,32 @@ function processResult(result, fromCache) {
         }, i * 100);
     }
 
-    // Отображение калорийности
+    // Отображение калорийности на 100 г
     document.getElementById('caloricValue').innerText =
-        `Калорийность: ${caloric_value} ккал / 100 г`;
+        `Калорийность: ${caloric_value["100g"]} ккал / 100 г`;
+
+    // Отображение калорийности за штуку или порцию
+    const perMeal = caloric_value["per_meal"];
+    if (perMeal && perMeal.value && perMeal.type) {
+        const perMealText = `Калорийность на ${perMeal.type === 'piece' ? 'штуку' : 'порцию'}: ${perMeal.value} ккал`;
+        // Добавляем новый элемент для отображения этой информации
+        let perMealDiv = document.getElementById('perMealCaloricValue');
+        if (!perMealDiv) {
+            perMealDiv = document.createElement('div');
+            perMealDiv.id = 'perMealCaloricValue';
+            perMealDiv.style.fontSize = '18px';
+            perMealDiv.style.marginBottom = '15px';
+            perMealDiv.style.textAlign = 'center';
+            perMealDiv.style.fontWeight = '500';
+            document.getElementById('caloricValue').after(perMealDiv);
+        }
+        perMealDiv.innerText = perMealText;
+    } else {
+        const perMealDiv = document.getElementById('perMealCaloricValue');
+        if (perMealDiv) {
+            perMealDiv.innerText = '';
+        }
+    }
 
     // Выделение частоты употребления
     if (harmfulness_rating >= harmfulnessThreshold) {
@@ -271,6 +327,30 @@ function processResult(result, fromCache) {
 
     document.getElementById('result').style.display = 'block';
     document.getElementById('clearCache').style.display = 'block';
+
+    // Проверяем, помещается ли результат на страницу
+    adjustResultHeight();
+}
+
+function adjustResultHeight() {
+    const resultDiv = document.getElementById('result');
+    const ratingDescriptionDiv = document.getElementById('ratingDescription');
+    const viewportHeight = window.innerHeight;
+    const resultRect = resultDiv.getBoundingClientRect();
+
+    // Проверяем, выходит ли результат за пределы экрана
+    if (resultRect.bottom > viewportHeight) {
+        // Уменьшаем высоту ratingDescription
+        const excessHeight = resultRect.bottom - viewportHeight + 20; // небольшой отступ
+        const newHeight = ratingDescriptionDiv.offsetHeight - excessHeight;
+
+        if (newHeight > 100) { // минимальная высота
+            ratingDescriptionDiv.style.maxHeight = newHeight + 'px';
+        }
+    } else {
+        // Если помещается, устанавливаем стандартную высоту
+        ratingDescriptionDiv.style.maxHeight = '200px';
+    }
 }
 
 // Очистка сохраненных данных

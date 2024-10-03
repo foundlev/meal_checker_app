@@ -44,7 +44,7 @@ body {
 h1 {
     text-align: center;
     font-weight: 700;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
 }
 
 .input-container {
@@ -129,7 +129,7 @@ h1 {
 }
 
 #result {
-    margin-top: 30px;
+    margin-top: 20px;
     background-color: var(--surface-color);
     padding: 25px;
     border-radius: var(--border-radius);
@@ -177,9 +177,16 @@ h1 {
     font-weight: 500;
 }
 
+#perMealCaloricValue {
+    font-size: 18px;
+    margin-bottom: 15px;
+    text-align: center;
+    font-weight: 500;
+}
+
 #consumptionFrequency {
     font-size: 20px;
-    margin-bottom: 25px;
+    margin-bottom: 15px;
     text-align: center;
     font-weight: 700;
 }
@@ -187,8 +194,10 @@ h1 {
 #ratingDescription {
     font-size: 16px;
     line-height: 1.7;
-    max-height: 200px;
     overflow-y: auto;
+    max-height: 200px;
+    /* Минимальная высота для предотвращения сжатия */
+    min-height: 100px;
 }
 
 #savedIndicator {
@@ -247,6 +256,77 @@ h1 {
     font-size: 18px;
     font-weight: 500;
     color: var(--text-color);
+}
+
+#cancelButton {
+    margin-top: 10px;
+    padding: 10px 20px;
+    background-color: var(--danger-color);
+    border: none;
+    border-radius: var(--border-radius);
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#cancelButton:hover {
+    background-color: #DC2626;
+}
+
+/* Стили для модального окна пароля */
+#passwordModal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+}
+
+.modal-content {
+    background-color: var(--surface-color);
+    padding: 30px;
+    border-radius: var(--border-radius);
+    text-align: center;
+    width: 80%;
+    max-width: 300px;
+}
+
+.modal-content h2 {
+    margin-bottom: 20px;
+}
+
+#passwordInput {
+    width: 100%;
+    padding: 10px 15px;
+    font-size: 16px;
+    border: 1px solid #E5E7EB;
+    border-radius: var(--border-radius);
+    margin-bottom: 20px;
+    background-color: var(--surface-color);
+    color: var(--text-color);
+}
+
+#passwordSubmitButton {
+    width: 100%;
+    padding: 12px;
+    background-color: var(--primary-color);
+    border: none;
+    border-radius: var(--border-radius);
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#passwordSubmitButton:hover {
+    background-color: var(--primary-color-light);
 }
 
 @keyframes spin {

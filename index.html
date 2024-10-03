@@ -15,7 +15,8 @@
     <!-- Анимация загрузки -->
     <div id="loadingOverlay" style="display: none;">
         <div class="loader"></div>
-        <div id="loadingText">Загрузка, попытка #1</div>
+        <div id="loadingText">Загрузка...</div>
+        <button id="cancelButton">Отмена</button>
     </div>
     <div class="container">
         <h1>Проверка продуктов</h1>
@@ -30,6 +31,7 @@
             <div id="description"></div>
             <div id="harmfulnessRating"></div>
             <div id="caloricValue"></div>
+            <div id="perMealCaloricValue"></div>
             <div id="consumptionFrequency"></div>
             <div id="ratingDescription"></div>
             <div id="savedIndicator" style="display: none;">
@@ -40,6 +42,16 @@
             Очистить сохраненные данные
         </button>
     </div>
+
+    <!-- Диалог ввода пароля -->
+    <div id="passwordModal" style="display: none;">
+        <div class="modal-content">
+            <h2>Введите пароль</h2>
+            <input type="password" id="passwordInput" placeholder="Пароль">
+            <button id="passwordSubmitButton">OK</button>
+        </div>
+    </div>
+
     <!-- Подключение скрипта -->
     <script src="script.js"></script>
 </body>
