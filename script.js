@@ -3,6 +3,20 @@ let password = localStorage.getItem('password');
 
 if (!password) {
     showPasswordModal();
+} else {
+    verifyPassword(password)
+        .then(isValid => {
+            if (isValid) {
+                syncSavedItems();
+            } else {
+                localStorage.removeItem('password');
+                showPasswordModal();
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка при проверке пароля:', error);
+            showPasswordModal();
+        });
 }
 
 function showPasswordModal() {
@@ -11,14 +25,56 @@ function showPasswordModal() {
 
     const passwordSubmitButton = document.getElementById('passwordSubmitButton');
     passwordSubmitButton.addEventListener('click', () => {
-        const passwordInput = document.getElementById('passwordInput').value.trim();
+        const passwordInputField = document.getElementById('passwordInput');
+        const passwordInput = passwordInputField.value.trim();
+        const passwordError = document.getElementById('passwordError');
         if (passwordInput) {
             password = passwordInput;
-            localStorage.setItem('password', password);
-            passwordModal.style.display = 'none';
+            verifyPassword(password)
+                .then(isValid => {
+                    if (isValid) {
+                        localStorage.setItem('password', password);
+                        passwordModal.style.display = 'none';
+                        syncSavedItems();
+                    } else {
+                        passwordError.innerText = 'Неверный пароль.';
+                        passwordInputField.value = '';
+                    }
+                })
+                .catch(error => {
+                    passwordError.innerText = 'Ошибка при проверке пароля.';
+                    console.error('Ошибка при проверке пароля:', error);
+                });
         } else {
-            alert('Пароль обязателен для использования приложения.');
+            passwordError.innerText = 'Пароль обязателен для использования приложения.';
         }
+    });
+}
+
+function verifyPassword(password) {
+    const url = 'https://myapihelper.na4u.ru/ai.php?method=verify';
+    const payload = {
+        password: password
+    };
+
+    return fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.valid) {
+            return true;
+        } else {
+            return false;
+        }
+    })
+    .catch(error => {
+        console.error('Ошибка при проверке пароля:', error);
+        return false;
     });
 }
 
@@ -26,13 +82,69 @@ let lastSubmissionTime = 0;
 let attemptCount = 0;
 const maxAttempts = 3;
 let controller = null; // Для отмены запроса
+let savedItems = []; // Сохраненные названия блюд с сервера
+
+
+function addItemToSaved(item) {
+    if (item && !savedItems.includes(item)) {
+        savedItems.push(item);
+    }
+}
+
+// Индикатор синхронизации
+const syncIndicator = document.getElementById('syncIndicator');
+const syncText = document.getElementById('syncText');
+
+function syncSavedItems() {
+    showSyncIndicator('loading', 'Синхронизация...');
+
+    const url = 'https://myapihelper.na4u.ru/ai.php?method=sync';
+    const payload = {
+        password: password
+    };
+
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.items) {
+            savedItems = data.items;
+            showSyncIndicator('success', 'Синхронизировано');
+            setTimeout(() => {
+                hideSyncIndicator();
+            }, 3000);
+        } else {
+            console.error('Ошибка при синхронизации:', data.error);
+            showSyncIndicator('error', 'Ошибка синхронизации');
+        }
+    })
+    .catch(error => {
+        console.error('Ошибка при синхронизации:', error);
+        showSyncIndicator('error', 'Ошибка синхронизации');
+    });
+}
+
+function showSyncIndicator(status, message) {
+    syncIndicator.className = '';
+    syncIndicator.classList.add(status);
+    syncText.innerText = message;
+    syncIndicator.style.display = 'flex';
+}
+
+function hideSyncIndicator() {
+    syncIndicator.style.display = 'none';
+}
 
 // Список популярных продуктов и блюд
 const popularItems = [
     // Ваш список популярных продуктов и блюд
 ];
 
-// Обработка автодополнения
 const productInput = document.getElementById('productInput');
 const suggestionsList = document.getElementById('suggestions');
 
@@ -40,14 +152,10 @@ productInput.addEventListener('input', () => {
     const query = productInput.value.trim().toLowerCase();
     suggestionsList.innerHTML = '';
     if (query.length > 0) {
-        const savedKeys = Object.keys(localStorage).filter(key => key.startsWith('meal_'));
-        const savedSuggestions = savedKeys
-            .map(key => key.replace('meal_', ''))
-            .filter(name => name.includes(query));
-
+        const filteredSavedItems = savedItems.filter(name => name.includes(query));
         const popularSuggestions = popularItems.filter(item => item.includes(query));
 
-        const allSuggestions = [...new Set([...savedSuggestions, ...popularSuggestions])];
+        const allSuggestions = [...new Set([...filteredSavedItems, ...popularSuggestions])];
 
         allSuggestions.forEach(suggestion => {
             const li = document.createElement('li');
@@ -83,29 +191,12 @@ document.getElementById('submitButton').addEventListener('click', function() {
         document.getElementById('error').innerText =
             'Введите название продукта.';
         return;
-    } else if (searchMealName.length > 50) {
+    } else if (searchMealName.length > 100) {
         document.getElementById('error').innerText =
-            'Название продукта не должно превышать 50 символов.';
+            'Название продукта не должно превышать 100 символов.';
         return;
     } else {
         document.getElementById('error').innerText = '';
-    }
-
-    const savedData = localStorage.getItem(`meal_${searchMealName}`);
-    let parsedData = null;
-    if (savedData) {
-        try {
-            parsedData = JSON.parse(savedData);
-            // Проверяем наличие новых полей в ответе
-            if (!parsedData.caloric_value || !parsedData.caloric_value["per_meal"]) {
-                throw new Error("Old format");
-            }
-            processResult(parsedData, true);
-            return;
-        } catch (e) {
-            // Если старый формат, удаляем сохраненные данные
-            localStorage.removeItem(`meal_${searchMealName}`);
-        }
     }
 
     attemptCount = 0;
@@ -115,7 +206,7 @@ document.getElementById('submitButton').addEventListener('click', function() {
 function showLoading() {
     document.getElementById('loadingOverlay').style.display = 'flex';
     document.getElementById('loadingText').innerText = 'Загрузка...';
-    document.getElementById('cancelButton').style.display = 'block';
+    document.getElementById('cancelButton').style.display = 'inline-block';
     document.getElementById('cancelButton').addEventListener('click', cancelLoading);
 }
 
@@ -169,21 +260,23 @@ function checkMeal(searchMealName) {
     .then(response => response.json())
     .then(data => {
         clearTimeout(timeoutId);
+        hideLoading();
+        if (data.error) {
+            document.getElementById('error').innerText = `Ошибка: ${data.error}`;
+            return;
+        }
+
         try {
-            // Извлекаем content из ответа
             const content = data.choices[0].message.content;
-            // Парсим content как JSON
             const result = JSON.parse(content);
 
             if (result.correct === false) {
-                hideLoading();
                 document.getElementById('error').innerText =
                     'Введенное значение не является продуктом или блюдом.';
                 return;
             }
-            hideLoading();
-            localStorage.setItem(`meal_${searchMealName}`, JSON.stringify(result));
-            processResult(result, false);
+
+            processResult(result, data.from_cache);
         } catch (e) {
             if (attemptCount < maxAttempts) {
                 setTimeout(() => {
@@ -191,7 +284,6 @@ function checkMeal(searchMealName) {
                     checkMeal(searchMealName);
                 }, attemptCount * 1000);
             } else {
-                hideLoading();
                 document.getElementById('error').innerText =
                     'Ошибка при обработке данных.';
             }
@@ -199,20 +291,13 @@ function checkMeal(searchMealName) {
     })
     .catch(error => {
         clearTimeout(timeoutId);
-        if (attemptCount < maxAttempts && error.name !== 'AbortError') {
-            setTimeout(() => {
-                updateLoadingText();
-                checkMeal(searchMealName);
-            }, attemptCount * 1000);
+        hideLoading();
+        if (error.name === 'AbortError') {
+            document.getElementById('error').innerText =
+                'Загрузка отменена.';
         } else {
-            hideLoading();
-            if (error.name === 'AbortError') {
-                document.getElementById('error').innerText =
-                    'Загрузка отменена.';
-            } else {
-                document.getElementById('error').innerText =
-                    'Не удалось получить данные.';
-            }
+            document.getElementById('error').innerText =
+                `Не удалось получить данные: ${error.message}`;
         }
     });
 }
@@ -220,6 +305,9 @@ function checkMeal(searchMealName) {
 function processResult(result, fromCache) {
     document.getElementById('harmfulnessRating').innerHTML = '';
     document.getElementById('savedIndicator').style.display = fromCache ? 'block' : 'none';
+
+    const newItem = document.getElementById('productInput').value;
+    addItemToSaved(newItem);
 
     let description = result.description;
     const harmfulness_rating = result.harmfulness_rating;
@@ -287,23 +375,11 @@ function processResult(result, fromCache) {
     const perMeal = caloric_value["per_meal"];
     if (perMeal && perMeal.value && perMeal.type) {
         const perMealText = `Калорийность на ${perMeal.type === 'piece' ? 'штуку' : 'порцию'}: ${perMeal.value} ккал`;
-        // Добавляем новый элемент для отображения этой информации
         let perMealDiv = document.getElementById('perMealCaloricValue');
-        if (!perMealDiv) {
-            perMealDiv = document.createElement('div');
-            perMealDiv.id = 'perMealCaloricValue';
-            perMealDiv.style.fontSize = '18px';
-            perMealDiv.style.marginBottom = '15px';
-            perMealDiv.style.textAlign = 'center';
-            perMealDiv.style.fontWeight = '500';
-            document.getElementById('caloricValue').after(perMealDiv);
-        }
         perMealDiv.innerText = perMealText;
     } else {
         const perMealDiv = document.getElementById('perMealCaloricValue');
-        if (perMealDiv) {
-            perMealDiv.innerText = '';
-        }
+        perMealDiv.innerText = '';
     }
 
     // Выделение частоты употребления
@@ -326,7 +402,6 @@ function processResult(result, fromCache) {
         rating_description;
 
     document.getElementById('result').style.display = 'block';
-    document.getElementById('clearCache').style.display = 'block';
 
     // Проверяем, помещается ли результат на страницу
     adjustResultHeight();
@@ -352,16 +427,3 @@ function adjustResultHeight() {
         ratingDescriptionDiv.style.maxHeight = '200px';
     }
 }
-
-// Очистка сохраненных данных
-document.getElementById('clearCache').addEventListener('click', () => {
-    const keys = Object.keys(localStorage);
-    for (let key of keys) {
-        if (key.startsWith('meal_')) {
-            localStorage.removeItem(key);
-        }
-    }
-    document.getElementById('savedIndicator').style.display = 'none';
-    document.getElementById('clearCache').style.display = 'none';
-    alert('Сохраненные данные очищены.');
-});

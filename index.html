@@ -16,12 +16,28 @@
     <div id="loadingOverlay" style="display: none;">
         <div class="loader"></div>
         <div id="loadingText">Загрузка...</div>
-        <button id="cancelButton">Отмена</button>
+        <button id="cancelButton" style="display: none;">Отменить</button>
     </div>
+
+    <!-- Индикатор синхронизации -->
+    <div id="syncIndicator" style="display: none;">
+        <div id="syncText">Синхронизация...</div>
+    </div>
+
+    <!-- Модальное окно для ввода пароля -->
+    <div id="passwordModal" style="display: none">
+        <div class="modal-content">
+            <h2>Введите пароль</h2>
+            <input type="password" id="passwordInput" placeholder="Пароль">
+            <div id="passwordError" class="error-message"></div>
+            <button id="passwordSubmitButton">Отправить</button>
+        </div>
+    </div>
+
     <div class="container">
         <h1>Проверка продуктов</h1>
         <div class="input-container">
-            <input type="text" id="productInput" maxlength="50" placeholder="Введите название продукта" autocomplete="off">
+            <input type="text" id="productInput" maxlength="100" placeholder="Введите название продукта" autocomplete="off">
             <ul id="suggestions"></ul>
         </div>
         <button id="submitButton">Отправить</button>
@@ -38,20 +54,7 @@
                 Результат из сохраненных данных
             </div>
         </div>
-        <button id="clearCache" style="display: none;">
-            Очистить сохраненные данные
-        </button>
     </div>
-
-    <!-- Диалог ввода пароля -->
-    <div id="passwordModal" style="display: none;">
-        <div class="modal-content">
-            <h2>Введите пароль</h2>
-            <input type="password" id="passwordInput" placeholder="Пароль">
-            <button id="passwordSubmitButton">OK</button>
-        </div>
-    </div>
-
     <!-- Подключение скрипта -->
     <script src="script.js"></script>
 </body>
