@@ -88,6 +88,7 @@ let savedItems = []; // Сохраненные названия блюд с се
 function addItemToSaved(item) {
     if (item && !savedItems.includes(item)) {
         savedItems.push(item);
+        savedItems.sort();
     }
 }
 
@@ -114,6 +115,7 @@ function syncSavedItems() {
     .then(data => {
         if (data.items) {
             savedItems = data.items;
+            savedItems.sort();
             showSyncIndicator('success', 'Синхронизировано');
             setTimeout(() => {
                 hideSyncIndicator();
@@ -320,6 +322,7 @@ function processResult(result, fromCache) {
         description = description.slice(0, -1);
     }
 
+    description = description.charAt(0).toUpperCase() + description.slice(1);
     document.getElementById('description').innerText = description;
 
     // Отображение вредности цифрой
@@ -336,6 +339,7 @@ function processResult(result, fromCache) {
     for (let i = 1; i <= 10; i++) {
         const rect = document.createElement('div');
         rect.classList.add('harmfulness-rect');
+        rect.style.opacity = '0'; // Сбрасываем opacity
         if (i <= harmfulness_rating) {
             rect.classList.add('filled');
             if (i >= harmfulnessThreshold) {
@@ -401,7 +405,17 @@ function processResult(result, fromCache) {
     document.getElementById('ratingDescription').innerText =
         rating_description;
 
+    const resultDiv = document.getElementById('result');
+    // Сбрасываем стили перед анимацией
+    resultDiv.style.opacity = '0';
+    resultDiv.style.transform = 'translateY(20px)';
     document.getElementById('result').style.display = 'block';
+
+    setTimeout(() => {
+        const resultDiv = document.getElementById('result');
+        resultDiv.style.opacity = '1';
+        resultDiv.style.transform = 'translateY(0)';
+    }, 50); // небольшая задержка для корректной анимации
 
     // Проверяем, помещается ли результат на страницу
     adjustResultHeight();

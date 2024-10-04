@@ -140,6 +140,18 @@ button:disabled {
     padding: 25px;
     border-radius: var(--border-radius);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+
+    /* Ваши существующие стили */
+    margin-top: 20px;
+    background-color: var(--surface-color);
+    padding: 25px;
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+
+    /* Добавьте эти свойства для анимации */
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
 }
 
 #description {
@@ -175,6 +187,7 @@ button:disabled {
     border-radius: 6px;
     transition: background-color 0.3s, opacity 0.3s;
     opacity: 0;
+    transition: opacity 0.3s ease, background-color 0.3s ease;
 }
 
 .harmfulness-rect.filled {
