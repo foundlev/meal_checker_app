@@ -375,17 +375,6 @@ function processResult(result, fromCache) {
     document.getElementById('caloricValue').innerText =
         `Калорийность: ${caloric_value["100g"]} ккал / 100 г`;
 
-    // Отображение калорийности за штуку или порцию
-    const perMeal = caloric_value["per_meal"];
-    if (perMeal && perMeal.value && perMeal.type) {
-        const perMealText = `Калорийность на ${perMeal.type === 'piece' ? 'штуку' : 'порцию'}: ${perMeal.value} ккал`;
-        let perMealDiv = document.getElementById('perMealCaloricValue');
-        perMealDiv.innerText = perMealText;
-    } else {
-        const perMealDiv = document.getElementById('perMealCaloricValue');
-        perMealDiv.innerText = '';
-    }
-
     // Выделение частоты употребления
     if (harmfulness_rating >= harmfulnessThreshold) {
         consumption_frequency = 'Забанен';
